@@ -1,0 +1,117 @@
+body {
+    font-family: sans-serif;
+    margin: 20px;
+    background-color: #f4f4f4;
+}
+
+h1 {
+    text-align: center;
+    color: #333;
+}
+
+#status-container,
+#controls-container,
+#log-container {
+    background-color: #fff;
+    padding: 15px;
+    margin-bottom: 15px;
+    border-radius: 5px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+h2 {
+    margin-top: 0;
+    color: #555;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 5px;
+}
+
+#reader-status,
+#card-status,
+#command-status {
+    font-weight: bold;
+    padding: 8px;
+    border-radius: 4px;
+    margin-top: 10px;
+    display: inline-block;
+    min-width: 200px;
+    text-align: center;
+}
+
+.status-waiting-reader {
+    color: orange;
+}
+
+.status-waiting-card {
+    color: blue;
+}
+
+.status-card-present {
+    color: green;
+}
+
+button {
+    padding: 10px 15px;
+    margin-right: 10px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+button:hover:not(:disabled) {
+    background-color: #0056b3;
+}
+
+button:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+}
+
+#log-output {
+    height: 300px;
+    overflow-y: scroll;
+    border: 1px solid #ccc;
+    padding: 10px;
+    background-color: #f9f9f9;
+    font-family: monospace;
+    font-size: 0.9em;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+
+#log-output div {
+    padding: 2px 0;
+    border-bottom: 1px dotted #eee;
+}
+
+#log-output div:last-child {
+    border-bottom: none;
+}
+
+.log-server {
+    color: #007bff;
+}
+
+.log-reader {
+    color: #28a745;
+}
+
+.log-error {
+    color: #dc3545;
+    font-weight: bold;
+}
+
+#command-status.status-success {
+    background-color: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+#command-status.status-error {
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+} 
