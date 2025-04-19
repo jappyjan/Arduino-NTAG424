@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NFC Reader Control</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <h1>NFC Reader Control</h1>
+
+    <div id="status-container">
+        <h2>Status</h2>
+        <p id="reader-status">Connecting to server...</p>
+        <p id="card-status"></p>
+    </div>
+
+    <div id="controls-container">
+        <h2>Controls</h2>
+        <button id="enroll-button" disabled>Enroll Card</button>
+        <button id="authenticate-button" disabled>Authenticate Card</button>
+        <p id="command-status"></p>
+    </div>
+
+    <div id="log-container">
+        <h2>Logs</h2>
+        <div id="log-output"></div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html> 
