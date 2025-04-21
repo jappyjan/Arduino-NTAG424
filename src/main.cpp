@@ -3,12 +3,11 @@
 #include <Adafruit_PN532_NTAG424.h>
 
 // --- PN532 Configuration ---
-// Define the pins for SPI communication with the PN532 breakout
-// These pins match the defaults for ESP32-C3 SuperMini
-#define PN532_SCK (4)
-#define PN532_MISO (5)
-#define PN532_MOSI (6)
-#define PN532_SS (7)
+#define SCK_PIN (6)      // Using HW SPI SCK (GPIO 6)
+#define MISO_PIN (2)     // Using HW SPI MISO (GPIO 2)
+#define MOSI_PIN (7)     // Using HW SPI MOSI (GPIO 7)
+#define SS_PIN_PN532 (1) // CS pin for PN532 (must be unused)
+Adafruit_PN532 nfc(SCK_PIN, MISO_PIN, MOSI_PIN, SS_PIN_PN532); // Old constructor
 
 // --- NTAG424 Configuration ---
 // Default NTAG424 Key (Factory default) - 16 bytes of 0x00
@@ -36,7 +35,11 @@ const uint8_t AUTH_CMD = 0x71;
 
 // Initialize the PN532 interface for SPI
 // Use the base class Adafruit_PN532, NTAG424 functions are added by the include
-Adafruit_PN532 nfc(PN532_SCK, PN532_MISO, PN532_MOSI, PN532_SS);
+// Adafruit_PN532 nfc(PN532_SCK, PN532_MISO, PN532_MOSI, PN532_SS);
+
+// Use Hardware SPI
+Adafruit_PN532 nfc(SCK_PIN, MISO_PIN, MOSI_PIN, SS_PIN_PN532); // Old constructor
+// Adafruit_PN532 nfc(PN532_SS);
 
 // --- Function Prototypes ---
 void printMenu();
