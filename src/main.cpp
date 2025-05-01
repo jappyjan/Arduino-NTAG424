@@ -1,13 +1,19 @@
 #include <Arduino.h>
-#include <SPI.h> // Required for SPI
+// #include <SPI.h> // Required for SPI
+#include <Wire.h>
 #include <Adafruit_PN532_NTAG424.h>
 
 // --- PN532 Configuration ---
-#define SCK_PIN (6)      // Using HW SPI SCK (GPIO 6)
-#define MISO_PIN (2)     // Using HW SPI MISO (GPIO 2)
-#define MOSI_PIN (7)     // Using HW SPI MOSI (GPIO 7)
+#define PIN_SPI_SCK 10
+#define PIN_SPI_MISO 8
+#define PIN_SPI_MOSI 7
 #define SS_PIN_PN532 (1) // CS pin for PN532 (must be unused)
-Adafruit_PN532 nfc(SCK_PIN, MISO_PIN, MOSI_PIN, SS_PIN_PN532); // Old constructor
+
+#define PIN_PN532_IRQ (2)
+#define PIN_PN532_RESET (0)
+
+#define PIN_I2C_SDA (7)
+#define PIN_I2C_SCL (6)
 
 // --- NTAG424 Configuration ---
 // Default NTAG424 Key (Factory default) - 16 bytes of 0x00
@@ -38,7 +44,8 @@ const uint8_t AUTH_CMD = 0x71;
 // Adafruit_PN532 nfc(PN532_SCK, PN532_MISO, PN532_MOSI, PN532_SS);
 
 // Use Hardware SPI
-Adafruit_PN532 nfc(SCK_PIN, MISO_PIN, MOSI_PIN, SS_PIN_PN532); // Old constructor
+// Adafruit_PN532 nfc(PIN_SPI_SCK, PIN_SPI_MISO, PIN_SPI_MOSI, SS_PIN_PN532); // Old constructor
+Adafruit_PN532 nfc(PIN_PN532_IRQ, PIN_PN532_RESET, &Wire);
 // Adafruit_PN532 nfc(PN532_SS);
 
 // --- Function Prototypes ---
@@ -60,6 +67,8 @@ void setup()
   Serial.println(); // Start with a newline
   Serial.println("NTAG424 Enrollment/Authentication Example");
   Serial.println("----------------------------------------");
+
+  Wire.begin(PIN_I2C_SDA, PIN_I2C_SCL);
 
   nfc.begin();
 
