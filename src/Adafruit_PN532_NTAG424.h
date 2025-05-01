@@ -93,10 +93,11 @@
 #define NTAG424_CMD_CHANGEFILESETTINGS (0x5F) ///< changefilesettings
 #define NTAG424_CMD_GETCARDUUID (0x51)        ///< getfilesettings
 #define NTAG424_CMD_READDATA (0xAD)           ///< Readdata
+#define NTAG424_CMD_WRITEDATA (0x8D)          ///< Writedata
 #define NTAG424_CMD_GETVERSION (0x60)         ///< GetVersion
 #define NTAG424_CMD_NEXTFRAME (0xAF)          ///< Nextframe
 
-#define NTAG424_RESPONE_GETVERSION_HWTYPE_NTAG424                              \
+#define NTAG424_RESPONE_GETVERSION_HWTYPE_NTAG424 \
   (0x04) ///< Response value HWType NTAG 424
 
 #define NTAG424_COM_ISOCLA (0x00)          ///< ISO prefix
@@ -164,7 +165,8 @@
 /**
  * @brief Class for working with Adafruit PN532 NFC/RFID breakout boards.
  */
-class Adafruit_PN532 {
+class Adafruit_PN532
+{
 public:
   Adafruit_PN532(uint8_t clk, uint8_t miso, uint8_t mosi,
                  uint8_t ss);                          // Software SPI
@@ -248,6 +250,7 @@ public:
   uint8_t ntag424_rotl(uint8_t *input, uint8_t *output, uint8_t bufferlen,
                        uint8_t rotation);
   uint8_t ntag424_ReadData(uint8_t *buffer, int fileno, int offset, int size);
+  uint8_t ntag424_WriteData(const uint8_t *data, int fileno, int offset, int size, uint8_t keyNo);
   uint8_t ntag424_Authenticate(uint8_t *key, uint8_t keyno, uint8_t cmd);
   uint8_t ntag424_ChangeKey(uint8_t *oldkey, uint8_t *newkey,
                             uint8_t keynumber);
@@ -275,16 +278,16 @@ public:
 #define NTAG424_AUTHRESPONSE_PCDCAP2_SIZE 6 ///< Size of PCDCAP2
 
 #define NTAG424_AUTHRESPONSE_TI_OFFSET 0 ///< Offset for TI
-#define NTAG424_AUTHRESPONSE_RNDA_OFFSET                                       \
+#define NTAG424_AUTHRESPONSE_RNDA_OFFSET \
   NTAG424_AUTHRESPONSE_TI_SIZE ///< Offset for RND
-#define NTAG424_AUTHRESPONSE_PDCAP2_OFFSET                                     \
-  NTAG424_AUTHRESPONSE_TI_SIZE +                                               \
+#define NTAG424_AUTHRESPONSE_PDCAP2_OFFSET \
+  NTAG424_AUTHRESPONSE_TI_SIZE +           \
       NTAG424_AUTHRESPONSE_RNDA_SIZE ///< Offset for PDCAP2
-#define NTAG424_AUTHRESPONSE_PCDCAP2_OFFSET                                    \
-  NTAG424_AUTHRESPONSE_TI_SIZE + NTAG424_AUTHRESPONSE_RNDA_SIZE +              \
+#define NTAG424_AUTHRESPONSE_PCDCAP2_OFFSET                       \
+  NTAG424_AUTHRESPONSE_TI_SIZE + NTAG424_AUTHRESPONSE_RNDA_SIZE + \
       NTAG424_AUTHRESPONSE_PDCAP2_SIZE ///< Offset for PCDCAP2
 
-  uint8_t ntag424_authresponse_TI[NTAG424_AUTHRESPONSE_TI_SIZE]; ///< TI Buffer
+  uint8_t ntag424_authresponse_TI[NTAG424_AUTHRESPONSE_TI_SIZE];     ///< TI Buffer
   uint8_t ntag424_authresponse_RNDA[NTAG424_AUTHRESPONSE_RNDA_SIZE]; ///< RNDA
                                                                      ///< Buffer
   uint8_t
@@ -295,18 +298,20 @@ public:
 
 #define NTAG424_SESSION_KEYSIZE 16 ///< Size of auth aes keys in byte
 
-  struct ntag424_SessionType {
+  struct ntag424_SessionType
+  {
     bool authenticated; ///< true = authenticated
     int cmd_counter;    ///< command counter
     uint8_t
-        session_key_enc[NTAG424_SESSION_KEYSIZE]; ///< session encryption key
+        session_key_enc[NTAG424_SESSION_KEYSIZE];     ///< session encryption key
     uint8_t session_key_mac[NTAG424_SESSION_KEYSIZE]; ///< session mac key
   }; ///< struct type foir the authentication session data
 
   struct ntag424_SessionType
       ntag424_Session; ///< authentication session data are stored here
 
-  struct ntag424_VersionInfoType {
+  struct ntag424_VersionInfoType
+  {
     uint8_t VendorID;       ///< VendorID
     uint8_t HWType;         ///< HWType
     uint8_t HWSubType;      ///< HWSubType
@@ -330,24 +335,25 @@ public:
 
   struct ntag424_VersionInfoType ntag424_VersionInfo; ///< global version info
 
-  struct ntag424_FileSettings { 
-                                ///<  complex :-(
-    uint8_t FileType;           ///< FileType
-    uint8_t FileOption;         ///< FileOption
-    uint8_t AccessRights;       ///< AccessRights
-    uint8_t FileSize;           ///< FileSize
-    uint8_t SDMOptions;         ///< SDMOptions
-    uint8_t SMDAccessRights;    ///< SMDAccessRights
-    uint8_t UIDOffset;          ///< UIDOffset
-    uint8_t SDMReadCtrOffset;   ///< SDMReadCtrOffset
-    uint8_t PICCDataOffset;     ///< PICCDataOffset
-    uint8_t TTStatusOffset;     ///< TTStatusOffset
-    uint8_t SDMMACInputOffset;  ///< SDMMACInputOffset
-    uint8_t SDMENCOffset;       ///< SDMENCOffset
-    uint8_t SDMENCLength;       ///< SDMENCLength
-    uint8_t SDMMACOffset;       ///< SDMMACOffset
-    uint8_t SDMReadCtrlLimit;   ///< SDMReadCtrlLimit
-  };  ///<  currently not used. filesettings are more
+  struct ntag424_FileSettings
+  {
+    ///<  complex :-(
+    uint8_t FileType;          ///< FileType
+    uint8_t FileOption;        ///< FileOption
+    uint8_t AccessRights;      ///< AccessRights
+    uint8_t FileSize;          ///< FileSize
+    uint8_t SDMOptions;        ///< SDMOptions
+    uint8_t SMDAccessRights;   ///< SMDAccessRights
+    uint8_t UIDOffset;         ///< UIDOffset
+    uint8_t SDMReadCtrOffset;  ///< SDMReadCtrOffset
+    uint8_t PICCDataOffset;    ///< PICCDataOffset
+    uint8_t TTStatusOffset;    ///< TTStatusOffset
+    uint8_t SDMMACInputOffset; ///< SDMMACInputOffset
+    uint8_t SDMENCOffset;      ///< SDMENCOffset
+    uint8_t SDMENCLength;      ///< SDMENCLength
+    uint8_t SDMMACOffset;      ///< SDMMACOffset
+    uint8_t SDMReadCtrlLimit;  ///< SDMReadCtrlLimit
+  }; ///<  currently not used. filesettings are more
 
   // NTAG2xx functions
   uint8_t ntag2xx_ReadPage(uint8_t page, uint8_t *buffer);

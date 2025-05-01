@@ -35,7 +35,7 @@ uint8_t fixedProdKey4[16] = {0xD0, 0xD1, 0xD2, 0xD3, 0xD4, 0xD5, 0xD6, 0xD7,
                              0xD8, 0xD9, 0xDA, 0xDB, 0xDC, 0xDD, 0xDE, 0xDF}; // App Key 4 (Card Master Key?)
 
 // Key number to use for authentication
-const uint8_t AUTH_KEY_NO = 1;
+const uint8_t AUTH_KEY_NO = 0;
 // Authentication command (0x71 = AuthenticateEV2First)
 const uint8_t AUTH_CMD = 0x71;
 
@@ -53,6 +53,7 @@ void printMenu();
 bool waitForCard(uint8_t *uid, uint8_t *uidLength);
 void enrollCard();
 void authenticateCard();
+void resetCard();
 void printHex(uint8_t *data, uint8_t len);
 
 // --- Setup ---
@@ -110,6 +111,10 @@ void loop()
     {
       authenticateCard();
     }
+    else if (command == 'r' || command == 'R')
+    {
+      resetCard();
+    }
     else
     {
       Serial.println("Invalid command.");
@@ -129,6 +134,7 @@ void printMenu()
   Serial.println("--- Menu ---");
   Serial.println(" e - Enroll New Card (Changes Keys!)");
   Serial.println(" a - Authenticate Card");
+  Serial.println(" r - Reset Card");
   Serial.print("Enter command: ");
 }
 
@@ -221,7 +227,7 @@ void enrollCard()
   // We need to figure out which key we authenticated with.
   // For simplicity, let's *try* changing from default first, then from fixed if that fails.
 
-  bool changeSuccess = false;
+  bool changeKeySuccess = false;
   uint8_t *authKeyUsed = defaultKey; // Assume default first
 
   if (nfc.ntag424_Authenticate(defaultKey, 0, AUTH_CMD))
@@ -248,7 +254,7 @@ void enrollCard()
   if (nfc.ntag424_ChangeKey(authKeyUsed, fixedProdKey0, 0))
   {
     Serial.println("OK");
-    changeSuccess = true; // At least Key 0 changed
+    changeKeySuccess = true; // At least Key 0 changed
 
     // Now authenticate with the NEW Key 0 to change other keys
     Serial.println("Authenticating with NEW Key 0 to change other keys...");
@@ -269,7 +275,7 @@ void enrollCard()
     else
     {
       Serial.println("Failed!");
-      changeSuccess = false;
+      changeKeySuccess = false;
     }
 
     // Change Key 2
@@ -279,7 +285,7 @@ void enrollCard()
     else
     {
       Serial.println("Failed!");
-      changeSuccess = false;
+      changeKeySuccess = false;
     }
 
     // Change Key 3
@@ -289,7 +295,7 @@ void enrollCard()
     else
     {
       Serial.println("Failed!");
-      changeSuccess = false;
+      changeKeySuccess = false;
     }
 
     // Change Key 4
@@ -299,20 +305,55 @@ void enrollCard()
     else
     {
       Serial.println("Failed!");
-      changeSuccess = false;
+      changeKeySuccess = false;
     }
   }
   else
   {
     Serial.println("Failed to change Key 0!");
     Serial.println("Enrollment failed. Card keys remain unchanged (either default or previous state).");
-    changeSuccess = false;
+    changeKeySuccess = false;
   }
 
-  if (changeSuccess)
+  if (changeKeySuccess)
   {
     Serial.println(); // Start with a newline
     Serial.println("All keys changed successfully!");
+
+    if (!nfc.ntag424_Authenticate(fixedProdKey0, 0, AUTH_CMD))
+    {
+      Serial.println("Failed to authenticate with the new Key 0.");
+      return;
+    }
+
+    uint8_t NDEF_FILE_ID = 0x02;
+    uint8_t fileSettings[2] = {0x11, 0x11};
+    if (!nfc.ntag424_ChangeFileSettings(NDEF_FILE_ID, fileSettings, 2, NTAG424_COMM_MODE_FULL))
+    {
+      Serial.println("Failed to change NDEF File settings");
+    }
+    else
+    {
+
+      Serial.println("NDEF File settings changed successfully.");
+    }
+
+    if (!nfc.ntag424_Authenticate(fixedProdKey1, 1, AUTH_CMD))
+    {
+      Serial.println("Failed to authenticate with the new Key 1.");
+      return;
+    }
+
+    uint8_t data[2] = {0x44, 0x55};
+    if (!nfc.ntag424_WriteData(data, NDEF_FILE_ID, 0, 2, AUTH_KEY_NO))
+    {
+      Serial.println("Failed to write NDEF data to card.");
+    }
+    else
+    {
+      Serial.println("NDEF data written successfully.");
+    }
+
     Serial.println("Enrollment Complete.");
     Serial.println("Card is now secured with the fixed 'production' keys.");
     Serial.println("!!! REMEMBER: These keys are insecure for real deployment !!!");
@@ -350,7 +391,7 @@ void authenticateCard()
   Serial.print("...");
 
   // Use the defined key number and authentication command
-  if (nfc.ntag424_Authenticate(fixedProdKey1, AUTH_KEY_NO, AUTH_CMD))
+  if (nfc.ntag424_Authenticate(fixedProdKey0, AUTH_KEY_NO, AUTH_CMD))
   {
     Serial.println(" SUCCESS!");
     Serial.println("Card authenticated successfully.");
@@ -376,8 +417,102 @@ void authenticateCard()
   // Wait for card removal
   Serial.println("Please remove the card.");
   while (nfc.readPassiveTargetID(PN532_MIFARE_ISO14443A, uid, &uidLength, 50))
-    ;
+  {
+  }
   Serial.println("Card removed.");
+}
+
+void resetCard()
+{
+  Serial.println(); // Start with a newline
+  Serial.println("--- Reset Card ---");
+  uint8_t uid[7];
+  uint8_t uidLength;
+
+  if (!waitForCard(uid, &uidLength))
+  {
+    Serial.println("Reset cancelled: No valid card found.");
+    return;
+  }
+
+  Serial.println("Resetting card...");
+
+  if (nfc.ntag424_Authenticate(fixedProdKey0, 0, AUTH_CMD))
+  {
+    Serial.println("Authenticated with fixed production key 0.");
+  }
+  else if (nfc.ntag424_Authenticate(defaultKey, 0, AUTH_CMD))
+  {
+    Serial.println("Authenticated with default key 0.");
+  }
+  else
+  {
+    Serial.println("Failed to authenticate with fixed production key 0.");
+    return;
+  }
+
+  if (nfc.ntag424_ChangeKey(fixedProdKey0, defaultKey, 0))
+  {
+    Serial.println("Key 0 changed to default key.");
+  }
+  else
+  {
+    Serial.println("Failed to change Key 0.");
+  }
+
+  /*
+    // re-authenticate with now default key 0
+    if (nfc.ntag424_Authenticate(defaultKey, 0, AUTH_CMD))
+    {
+      Serial.println("Re-authenticated with default key 0.");
+    }
+    else
+    {
+      Serial.println("Failed to re-authenticate with new default key 0.");
+      return;
+    }
+
+    // Change Key 1
+    if (nfc.ntag424_ChangeKey(defaultKey, fixedProdKey1, 1))
+    {
+      Serial.println("Key 1 changed to fixed production key 1.");
+    }
+    else
+    {
+      Serial.println("Failed to change Key 1.");
+    }
+
+    // Change Key 2
+    if (nfc.ntag424_ChangeKey(defaultKey, fixedProdKey2, 2))
+    {
+      Serial.println("Key 2 changed to fixed production key 2.");
+    }
+    else
+    {
+      Serial.println("Failed to change Key 2.");
+    }
+
+    // Change Key 3
+    if (nfc.ntag424_ChangeKey(defaultKey, fixedProdKey3, 3))
+    {
+      Serial.println("Key 3 changed to fixed production key 3.");
+    }
+    else
+    {
+      Serial.println("Failed to change Key 3.");
+    }
+
+    // Change Key 4
+    if (nfc.ntag424_ChangeKey(defaultKey, fixedProdKey4, 4))
+    {
+      Serial.println("Key 4 changed to fixed production key 4.");
+    }
+    else
+    {
+      Serial.println("Failed to change Key 4.");
+    }
+  */
+  Serial.println("Card reset complete.");
 }
 
 // Helper to print byte arrays as hex
